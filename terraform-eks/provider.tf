@@ -16,9 +16,9 @@ locals {
 
 terraform {
   backend "s3" {
-    bucket = "eks-terraform-state-files"
-    key    = "eks-terraform.tfstate"
-    region = "us-east-1"
+    bucket  = "eks-terraform-state-files"
+    key     = "eks-terraform.tfstate"
+    region  = "us-east-1"
     encrypt = true
   }
 }
