@@ -110,5 +110,5 @@ jobs:
     - name: Configure Kubectl
       run: |
         cd terraform-eks/
-        cluster_name=$(terraform output -raw cluster_name)
+        cluster_name=$( terraform output -raw cluster_name )
         aws eks update-kubeconfig --name $cluster_name
