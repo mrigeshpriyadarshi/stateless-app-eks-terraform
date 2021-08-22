@@ -15,10 +15,10 @@ locals {
 }
 
 data "terraform_remote_state" "eks" {
-    backend = "s3"
-    config {
-        bucket  = "eks-terraform-state-files"
-        key     = "eks-terraform.tfstate"
-        region  = var.region
-    }
+  backend = "s3"
+  config {
+    bucket = "eks-terraform-state-files"
+    key    = "eks-terraform.tfstate"
+    region = var.region
+  }
 }
