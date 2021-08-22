@@ -39,26 +39,51 @@ jobs:
     - name: Configure Kubectl
       # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: |
-        cd terraform-eks/
-        aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)
+        aws eks update-kubeconfig --name "my-eks"
 
     - name: Configure Kubeconfig
       id: kube_config_data
       run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
 
-    - name: deploy to cluster
-      uses: kodermax/kubectl-aws-eks@master
+    # - name: deploy to cluster
+    #   uses: kodermax/kubectl-aws-eks@master
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #     ECR_REPOSITORY: flask-crud
+    #     IMAGE_TAG: latest
+    #   with:
+    #     args: set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    # - name: verify deployment
+    #   uses: kodermax/kubectl-aws-eks@master
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #   with:
+    #     args: rollout status deployment/flask-crud
+
+    - name: Deploy to EKS
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: flask-crud
         IMAGE_TAG: latest
-      with:
-        args: set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      run: |
+        aws eks update-kubeconfig --name "my-eks"
+        kubectl config current-context
+        kubectl set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        kubectl apply -k k8s-manifests/
+        kubectl rollout status deployment/flask-crud
+        kubectl get services -o wide
 
-    - name: verify deployment
-      uses: kodermax/kubectl-aws-eks@master
+    - name: Verify Deployment
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-      with:
-        args: rollout status deployment/flask-crud
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: flask-crud
+        IMAGE_TAG: latest
+      run: |
+        aws eks update-kubeconfig --name "my-eks"
+        cd k8s-manifests/
+        kubectl rollout status deployment/flask-crud
+        kubectl get services -o wide
