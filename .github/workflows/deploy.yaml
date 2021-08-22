@@ -71,7 +71,7 @@ jobs:
       run: |
         aws eks update-kubeconfig --name "my-eks"
         kubectl config current-context
-        kubectl apply -k k8s-manifests/
+        kubectl apply -f k8s-manifests/*.yaml
         kubectl set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         kubectl apply -f k8s-manifests/*.yaml
         kubectl rollout status deployment/$ECR_REPOSITORY
