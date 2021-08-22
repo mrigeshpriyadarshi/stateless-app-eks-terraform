@@ -23,10 +23,12 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@master
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: "3.7"
+
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
@@ -44,12 +46,14 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+
     - name: Setup ECR
       run: |
         # Login to AWS ECR
         aws --version
         # $( aws ecr get-login --no-include-email )
         aws ecr get-login-password | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
     - name: Build and tag the image
       run: |
         # Build and tag the image
@@ -67,7 +71,6 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: production
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -107,4 +110,4 @@ jobs:
     - name: Configure Kubectl
       run: |
         cd terraform-eks/
-        aws eks update-kubeconfig --name $(terraform output cluster_name -raw )
+        aws eks update-kubeconfig --name $(terraform output -raw cluster_name)
