@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flask-crud-api
+  namespace: flask-crud
+spec:
+  template:
+    metadata:
+      labels:
+        app: flask-crud
+        role: flask-crud-api
+    spec:
+      securityContext:
+        runAsGroup: 1000
+        runAsUser: 1000
+      restartPolicy: OnFailure
+      containers:
+        - name: flask-crud-api
+          image: flask-crud:latest
+          command:
+            - python3
+          args:
+            - app.py
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 200m

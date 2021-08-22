@@ -13,3 +13,12 @@ locals {
   vpc_id       = "vpc-d8f23ea5"
   subnets      = ["subnet-73ffbf3e", "subnet-3d0db062"]
 }
+
+terraform {
+  backend "s3" {
+    bucket  = "eks-terraform-state-files"
+    key     = "eks-terraform.tfstate"
+    region  = "us-east-1"
+    encrypt = true
+  }
+}

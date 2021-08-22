@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-crud-web
+  namespace: flask-crud
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-crud
+      role: web
+  template:
+    metadata:
+      labels:
+        app: flask-crud
+        role: web
+    spec:
+      securityContext:
+        runAsGroup: 1000
+        runAsUser: 1000
+      containers:
+        - name: flask-crud-web
+          image: flask-crud:latest
+          ports:
+            - name: gunicorn
+              containerPort: 8080
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 200m
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              port: gunicorn
+              path: /
+          livenessProbe:
+            initialDelaySeconds: 10
+            exec:
+              command:
+                - /bin/sh
+                - -c 
+                - "pidof -x gunicorn"

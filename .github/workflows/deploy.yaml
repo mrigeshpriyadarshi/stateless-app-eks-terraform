@@ -1,58 +1,89 @@
 # # deploy.yml
-# name: Deploy Container via Terraform
+name: Deploy Container via Terraform
 
-# on:
-#   workflow_run:
-#     workflows: ["CI to EKS"]
-#     branches: [main]
-#     types: 
-#       - completed
+on:
+  workflow_run:
+    workflows: ["CI to EKS"]
+    branches: [main]
+    types:
+      - completed
 
-# # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-# env:
-#   AWS_DEFAULT_REGION: us-east-1
-#   AWS_DEFAULT_OUTPUT: json
-#   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-#   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#   CONTAINER_IMAGE: flask-crud:${{ github.sha }}
+# https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_DEFAULT_OUTPUT: json
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  CONTAINER_IMAGE: flask-crud:latest
 
-# jobs:
-#   terraform:
-#     name: 'Terraform'
-#     runs-on: ubuntu-latest
-#     environment: production
+jobs:
+  deploy:
+    name: deploy to cluster
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
 
-#     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-#     defaults:
-#       run:
-#         shell: bash
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-#     steps:
-#     # Checkout the repository to the GitHub Actions runner
-#     - name: Checkout
-#       uses: actions/checkout@v2
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-#     # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-#     - name: Setup Terraform
-#       uses: hashicorp/setup-terraform@v1
-#       # with:
-#       #   cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    - name: Configure Kubectl
+      # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        aws eks update-kubeconfig --name "my-eks"
 
-#     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-#     - name: Terraform Init
-#       run: terraform init
+    - name: Configure Kubeconfig
+      id: kube_config_data
+      run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
 
-#     # Checks that all Terraform configuration files adhere to a canonical format
-#     - name: Terraform Format
-#       run: terraform fmt -check
+    # - name: deploy to cluster
+    #   uses: kodermax/kubectl-aws-eks@master
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #     ECR_REPOSITORY: flask-crud
+    #     IMAGE_TAG: latest
+    #   with:
+    #     args: set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-#     # Generates an execution plan for Terraform
-#     - name: Terraform Plan
-#       run: terraform plan
+    # - name: verify deployment
+    #   uses: kodermax/kubectl-aws-eks@master
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #   with:
+    #     args: rollout status deployment/flask-crud
 
-#       # On push to main, build or change infrastructure according to Terraform configuration files
-#       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-#     - name: Terraform Apply
-#       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-#       run: terraform apply -auto-approve
+    - name: Deploy to EKS
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: flask-crud
+        IMAGE_TAG: latest
+      run: |
+        aws eks update-kubeconfig --name "my-eks"
+        kubectl config current-context
+        kubectl set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        kubectl apply -k k8s-manifests/
+        kubectl rollout status deployment/flask-crud
+        kubectl get services -o wide
+
+    - name: Verify Deployment
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: flask-crud
+        IMAGE_TAG: latest
+      run: |
+        aws eks update-kubeconfig --name "my-eks"
+        cd k8s-manifests/
+        kubectl rollout status deployment/flask-crud
+        kubectl get services -o wide
