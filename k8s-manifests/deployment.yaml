@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flask-crud-web
+  name: flask-crud
   namespace: flask-crud
 spec:
   replicas: 2
@@ -19,7 +19,7 @@ spec:
         runAsGroup: 1000
         runAsUser: 1000
       containers:
-        - name: flask-crud-web
+        - name: flask-crud
           image: flask-crud:latest
           ports:
             - name: gunicorn
