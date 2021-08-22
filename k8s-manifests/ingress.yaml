@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: flask-crud-web
+  namespace: flask-crud
+spec:
+  rules:
+    - host: flask-crud.demo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              serviceName: flask-crud-web
+              servicePort: http

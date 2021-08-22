@@ -14,11 +14,11 @@ locals {
   subnets      = ["subnet-73ffbf3e", "subnet-3d0db062"]
 }
 
-data "terraform_remote_state" "eks" {
-  backend = "s3"
-  config = {
+terraform {
+  backend "s3" {
     bucket = "eks-terraform-state-files"
     key    = "eks-terraform.tfstate"
-    region = var.region
+    region = "us-east-1"
+    encrypt = true
   }
 }
