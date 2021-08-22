@@ -3,7 +3,8 @@ name: Deploy Container via Terraform
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
     types:
       - closed
 
