@@ -2,11 +2,10 @@
 name: Deploy Container via Terraform
 
 on:
-  workflow_run:
-    workflows: ["CI to EKS"]
+  pull_request:
     branches: [main]
     types:
-      - completed
+      - closed
 
 # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 env:
