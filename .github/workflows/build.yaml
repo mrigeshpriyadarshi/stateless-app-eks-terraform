@@ -19,7 +19,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   # CONTAINER_IMAGE: flask-crud:latest
-  CONTAINER_IMAGE: flask-crud:${{ github.sha }}
+  CONTAINER_IMAGE: ${{ github.sha }}
 
 jobs:
   build-and-push:
@@ -53,26 +53,45 @@ jobs:
       run: |
         pytest
 
-    - name: Setup ECR
-      run: |
-        # Login to AWS ECR
-        aws --version
-        # $( aws ecr get-login --no-include-email )
-        aws ecr get-login-password | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+    # - name: Setup ECR
+    #   run: |
+    #     # Login to AWS ECR
+    #     aws --version
+    #     # $( aws ecr get-login --no-include-email )
+    #     aws ecr get-login-password | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build and tag the image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: flask-crud
+        IMAGE_TAG: latest
       run: |
         # Build and tag the image
         docker build \
-          -t $CONTAINER_IMAGE \
-          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$CONTAINER_IMAGE ./app
+          -t $ECR_REPOSITORY/$ECR_REPOSITORY:$IMAGE_TAG \
+          -t $ECR_REPOSITORY/$ECR_REPOSITORY:$CONTAINER_IMAGE ./app
     # Add additional steps here like scanning of image
 
     # Only push to registry on master
     - name: Push
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: flask-crud
+        IMAGE_TAG: latest
       run: |
         # Push image to AWS ECR
-        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$CONTAINER_IMAGE
+        docker push --all-tags $ECR_REGISTRY/$$ECR_REPOSITORY
 
   terraform:
     name: 'Terraform'
