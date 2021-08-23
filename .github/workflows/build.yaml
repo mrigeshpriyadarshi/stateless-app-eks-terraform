@@ -18,8 +18,8 @@ env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  # CONTAINER_IMAGE: flask-crud:latest
-  CONTAINER_IMAGE: ${{ github.sha }}
+  CONTAINER_IMAGE: ${{ github.event.pull_request.head.sha }}
+  # CONTAINER_IMAGE: ${{ github.sha }}
 
 jobs:
   build-and-push:
@@ -78,10 +78,8 @@ jobs:
         IMAGE_TAG: latest
       run: |
         # Build and tag the image
-        docker build \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$CONTAINER_IMAGE ./app
-    # Add additional steps here like scanning of image
+        # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$CONTAINER_IMAGE ./app
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$CONTAINER_IMAGE ./app
 
     # Only push to registry on master
     - name: Push
