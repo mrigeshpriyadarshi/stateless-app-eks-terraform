@@ -20,7 +20,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: flask-crud
-          image: flask-crud:latest
+          image: 750343070194.dkr.ecr.us-east-1.amazonaws.com/flask-crud:latest
           ports:
             - name: gunicorn
               containerPort: 8080
@@ -31,15 +31,15 @@ spec:
             limits:
               memory: 256Mi
               cpu: 200m
-          readinessProbe:
-            initialDelaySeconds: 10
-            httpGet:
-              port: gunicorn
-              path: /
-          livenessProbe:
-            initialDelaySeconds: 10
-            exec:
-              command:
-                - /bin/sh
-                - -c 
-                - "pidof -x gunicorn"
+          # readinessProbe:
+          #   initialDelaySeconds: 10
+          #   httpGet:
+          #     port: gunicorn
+          #     path: /
+          # livenessProbe:
+          #   initialDelaySeconds: 10
+          #   exec:
+          #     command:
+          #       - /bin/sh
+          #       - -c 
+          #       - "pidof -x gunicorn"

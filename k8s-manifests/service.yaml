@@ -4,6 +4,7 @@ metadata:
   name: flask-crud
   namespace: flask-crud
 spec:
+  type: LoadBalancer
   selector:
     app: flask-crud
     role: web
