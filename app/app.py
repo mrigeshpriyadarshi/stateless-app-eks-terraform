@@ -22,7 +22,7 @@ def not_found(error=None):
 def connect():
 	# validate the received values
 	with app.app_context():
-		resp = jsonify('Howdy from Stateless API!')
+		resp = jsonify('Howdy, from Stateless API!')
 		resp.status_code = 200
 		return resp
 
