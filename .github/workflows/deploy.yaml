@@ -72,10 +72,10 @@ jobs:
         aws eks update-kubeconfig --name "my-eks"
         kubectl config current-context
         kubectl apply -k k8s-manifests/
-        kubectl set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        kubectl apply -f k8s-manifests/deployment.yaml
-        kubectl rollout status deployment/$ECR_REPOSITORY
-        kubectl get services -o wide
+        kubectl set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -n $ECR_REPOSITORY
+        kubectl apply -f k8s-manifests/deployment.yaml -n $ECR_REPOSITORY
+        kubectl rollout status deployment/$ECR_REPOSITORY -n $ECR_REPOSITORY
+        kubectl get services -o wide -n $ECR_REPOSITORY
 
     - name: Verify Deployment
       env:
@@ -86,5 +86,5 @@ jobs:
       run: |
         aws eks update-kubeconfig --name "my-eks"
         cd k8s-manifests/
-        kubectl rollout status deployment/flask-crud
-        kubectl get services -o wide
+        kubectl rollout status deployment/$ECR_REPOSITORY -n $ECR_REPOSITORY
+        kubectl get services -o wide -n $ECR_REPOSITORY
