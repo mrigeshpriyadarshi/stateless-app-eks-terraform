@@ -18,8 +18,8 @@ env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  CONTAINER_IMAGE: ${{ github.event.pull_request.head.sha }}
   # CONTAINER_IMAGE: ${{ github.sha }}
+  CONTAINER_IMAGE: ${{ github.event.pull_request.head.sha }}
 
 jobs:
   build-and-push:
@@ -94,11 +94,6 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-    # defaults:
-    #   run:
-    #     shell: bash
 
     steps:
     # Checkout the repository to the GitHub Actions runner
