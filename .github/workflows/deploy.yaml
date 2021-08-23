@@ -74,7 +74,7 @@ jobs:
         kubectl config current-context
         kubectl apply -k k8s-manifests/
         kubectl set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$CONTAINER_IMAGE -n $ECR_REPOSITORY
-        kubectl apply -f k8s-manifests/deployment.yaml -n $ECR_REPOSITORY
+        # kubectl apply -f k8s-manifests/deployment.yaml -n $ECR_REPOSITORY
         kubectl rollout status deployment/$ECR_REPOSITORY -n $ECR_REPOSITORY
         kubectl get services -o wide -n $ECR_REPOSITORY
 
