@@ -91,7 +91,7 @@ jobs:
         IMAGE_TAG: latest
       run: |
         # Push image to AWS ECR
-        docker push --all-tags $ECR_REGISTRY/$$ECR_REPOSITORY
+        docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
 
   terraform:
     name: 'Terraform'
